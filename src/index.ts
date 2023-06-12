@@ -62,8 +62,8 @@ const args = yargs
         choices: ['TypeScript', 'Python'],
         default: 'TypeScript',
     })
-   .option('abiBasePath', {
-        describe: 'Language of output file to generate',
+    .option('abibasepath', {
+        describe: 'abiBasePath of abi path',
         type: 'string',
         default: 'src/abis',
     })
@@ -72,6 +72,7 @@ const args = yargs
         'Full usage example',
     ).argv;
 
+console.log(args, 'args');
 const templateFilename = args.template || `${__dirname}/../../templates/${args.language}/contract.handlebars`;
 const mainTemplate = utils.getNamedContent(templateFilename);
 const template = Handlebars.compile<ContextData>(mainTemplate.content);
@@ -93,7 +94,7 @@ function registerTypeScriptHelpers(): void {
     Handlebars.registerHelper('assertionType', utils.solTypeToAssertion.bind(utils));
     Handlebars.registerHelper('returnType', utils.solTypeToTsType.bind(utils, ParamKind.Output, args.backend));
 
-    Handlebars.registerHelper('ifEquals', function(this: typeof Handlebars, arg1: any, arg2: any, options: any): void {
+    Handlebars.registerHelper('ifEquals', function (this: typeof Handlebars, arg1: any, arg2: any, options: any): void {
         return arg1 === arg2 ? options.fn(this) : options.inverse(this); // tslint:disable-line:no-invalid-this
     });
 
@@ -103,15 +104,12 @@ function registerTypeScriptHelpers(): void {
     });
 
     // Format docstring for method description
-    Handlebars.registerHelper(
-        'formatDocstringForMethodTs',
-        (docString: string): Handlebars.SafeString => {
-            // preserve newlines
-            const regex = /([ ]{4,})+/gi;
-            const formatted = docString.replace(regex, '\n * ');
-            return new Handlebars.SafeString(formatted);
-        },
-    );
+    Handlebars.registerHelper('formatDocstringForMethodTs', (docString: string): Handlebars.SafeString => {
+        // preserve newlines
+        const regex = /([ ]{4,})+/gi;
+        const formatted = docString.replace(regex, '\n * ');
+        return new Handlebars.SafeString(formatted);
+    });
     // Get docstring for method param
     Handlebars.registerHelper(
         'getDocstringForParamTs',
@@ -269,7 +267,7 @@ for (const abiFileName of abiFileNames) {
         return eventData;
     });
 
-    const shouldIncludeBytecode = methodsData.find(methodData => methodData.stateMutability === 'pure') !== undefined;
+    const shouldIncludeBytecode = methodsData.find((methodData) => methodData.stateMutability === 'pure') !== undefined;
 
     const contextData = {
         contractName: namedContent.name,
@@ -280,7 +278,7 @@ for (const abiFileName of abiFileNames) {
         methods: methodsData,
         events: eventsData,
         debug: args.debug,
-        abiBasePath: args.abiBasePath
+        abibasepath: args.abibasepath,
     };
     const renderedCode = template(contextData);
     utils.writeOutputFile(outFilePath, renderedCode);
